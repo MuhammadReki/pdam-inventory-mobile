@@ -28,17 +28,17 @@ Aplikasi mobile sistem inventory **Perumda Air Minum Tirta Sago (PAMTIGO) Kota P
 ## 📸 Tampilan Aplikasi
 
 <p align="center">
-  <img src="screenshots/login.png" alt="Login" width="180" />
-  <img src="screenshots/dashboard.png" alt="Dashboard" width="180" />
-  <img src="screenshots/barang.png" alt="Master Barang" width="180" />
-  <img src="screenshots/masuk.png" alt="Barang Masuk" width="180" />
+  <img src="screenshots/login.jpeg" alt="Login" width="180" />
+  <img src="screenshots/dashboard.jpeg" alt="Dashboard" width="180" />
+  <img src="screenshots/barang.jpeg" alt="Master Barang" width="180" />
+  <img src="screenshots/masuk.jpeg" alt="Barang Masuk" width="180" />
 </p>
 
 <p align="center">
-  <img src="screenshots/keluar.png" alt="Barang Keluar" width="180" />
-  <img src="screenshots/laporan.png" alt="Laporan" width="180" />
-  <img src="screenshots/ai.png" alt="AI Assistant" width="180" />
-  <img src="screenshots/profile.png" alt="Profile" width="180" />
+  <img src="screenshots/keluar.jpeg" alt="Barang Keluar" width="180" />
+  <img src="screenshots/laporan.jpeg" alt="Laporan" width="180" />
+  <img src="screenshots/ai.jpeg" alt="AI Assistant" width="180" />
+  <img src="screenshots/profile.jpeg" alt="Profile" width="180" />
 </p>
 
 ## 🚀 Cara Install
