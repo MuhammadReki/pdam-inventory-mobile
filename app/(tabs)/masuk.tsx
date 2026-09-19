@@ -17,7 +17,7 @@ import api from "../../src/api";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLanguage } from "../../src/context/LanguageContext";
 
-export default function HomeScreen() {
+export default function MasukScreen() {
   const { t } = useLanguage();
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -30,16 +30,17 @@ export default function HomeScreen() {
   const [selectedId, setSelectedId] = useState(null);
 
   const [form, setForm] = useState({
-    kode_barang: "",
-    nama_barang: "",
-    satuan: "",
-    harga: "",
-    stok: "",
+    barang_id: "",
+    jumlah: "",
+    tanggal_masuk: "",
+    keterangan: "",
   });
 
-  const fetchBarang = async () => {
+  const [barangList, setBarangList] = useState([]);
+
+  const fetchBarangMasuk = async () => {
     try {
-      const response = await api.get("/barang");
+      const response = await api.get("/barang-masuk");
       setData(response.data.data);
       setFilteredData(response.data.data);
     } catch (error) {
@@ -51,13 +52,24 @@ export default function HomeScreen() {
     }
   };
 
+  const fetchBarangOptions = async () => {
+    try {
+      const response = await api.get("/barang");
+      setBarangList(response.data.data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   useEffect(() => {
-    fetchBarang();
+    fetchBarangMasuk();
+    fetchBarangOptions();
   }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchBarang();
+    fetchBarangMasuk();
+    fetchBarangOptions();
   };
 
   const handleSearch = (text) => {
@@ -67,8 +79,8 @@ export default function HomeScreen() {
     } else {
       const filtered = data.filter(
         (item) =>
-          item.nama_barang.toLowerCase().includes(text.toLowerCase()) ||
-          item.kode_barang.toLowerCase().includes(text.toLowerCase()),
+          item.barang.nama_barang.toLowerCase().includes(text.toLowerCase()) ||
+          item.barang.kode_barang.toLowerCase().includes(text.toLowerCase()),
       );
       setFilteredData(filtered);
     }
@@ -79,35 +91,32 @@ export default function HomeScreen() {
     setFilteredData(data);
   };
 
-  const getStatusStok = (stok) => {
-    if (stok > 10)
-      return {
-        label: t("dashboard.tersedia"),
-        color: "#22c55e",
-        bg: "#dcfce7",
-      };
-    if (stok > 5)
-      return {
-        label: t("dashboard.terbatas"),
-        color: "#d97706",
-        bg: "#fef9c3",
-      };
-    return { label: t("dashboard.kritis"), color: "#dc2626", bg: "#fee2e2" };
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return d.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
   };
 
   const handleAdd = async () => {
+    if (!form.barang_id || !form.jumlah || !form.tanggal_masuk) {
+      Alert.alert(t("common.error"), t("masuk.field_wajib"));
+      return;
+    }
     try {
-      await api.post("/barang", {
-        kode_barang: form.kode_barang,
-        nama_barang: form.nama_barang,
-        satuan: form.satuan,
-        harga: parseInt(form.harga),
-        stok: parseInt(form.stok),
+      await api.post("/barang-masuk", {
+        barang_id: parseInt(form.barang_id),
+        jumlah: parseInt(form.jumlah),
+        tanggal_masuk: form.tanggal_masuk,
+        keterangan: form.keterangan || null,
       });
-      Alert.alert(t("common.sukses"), t("barang.sukses_tambah"));
+      Alert.alert(t("common.sukses"), t("masuk.sukses_tambah"));
       resetForm();
       closeModal();
-      fetchBarang();
+      fetchBarangMasuk();
+      fetchBarangOptions();
     } catch (error) {
       Alert.alert(
         t("common.error"),
@@ -117,18 +126,22 @@ export default function HomeScreen() {
   };
 
   const handleEdit = async () => {
+    if (!form.barang_id || !form.jumlah || !form.tanggal_masuk) {
+      Alert.alert(t("common.error"), t("masuk.field_wajib"));
+      return;
+    }
     try {
-      await api.put(`/barang/${selectedId}`, {
-        kode_barang: form.kode_barang,
-        nama_barang: form.nama_barang,
-        satuan: form.satuan,
-        harga: parseInt(form.harga),
-        stok: parseInt(form.stok),
+      await api.put(`/barang-masuk/${selectedId}`, {
+        barang_id: parseInt(form.barang_id),
+        jumlah: parseInt(form.jumlah),
+        tanggal_masuk: form.tanggal_masuk,
+        keterangan: form.keterangan || null,
       });
-      Alert.alert(t("common.sukses"), t("barang.sukses_edit"));
+      Alert.alert(t("common.sukses"), t("masuk.sukses_edit"));
       resetForm();
       closeModal();
-      fetchBarang();
+      fetchBarangMasuk();
+      fetchBarangOptions();
     } catch (error) {
       Alert.alert(
         t("common.error"),
@@ -139,8 +152,8 @@ export default function HomeScreen() {
 
   const handleDelete = (id, name) => {
     Alert.alert(
-      t("barang.konfirmasi_hapus"),
-      `${t("barang.yakin_hapus")} "${name}"?`,
+      t("masuk.konfirmasi_hapus"),
+      `${t("masuk.yakin_hapus")} "${name}"?`,
       [
         { text: t("common.batal"), style: "cancel" },
         {
@@ -148,9 +161,10 @@ export default function HomeScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await api.delete(`/barang/${id}`);
-              Alert.alert(t("common.sukses"), t("barang.sukses_hapus"));
-              fetchBarang();
+              await api.delete(`/barang-masuk/${id}`);
+              Alert.alert(t("common.sukses"), t("masuk.sukses_hapus"));
+              fetchBarangMasuk();
+              fetchBarangOptions();
             } catch (error) {
               Alert.alert(t("common.error"), t("common.gagal"));
             }
@@ -164,11 +178,10 @@ export default function HomeScreen() {
     setIsEditing(false);
     setSelectedId(null);
     setForm({
-      kode_barang: "",
-      nama_barang: "",
-      satuan: "",
-      harga: "",
-      stok: "",
+      barang_id: "",
+      jumlah: "",
+      tanggal_masuk: new Date().toISOString().split("T")[0],
+      keterangan: "",
     });
     setModalVisible(true);
   };
@@ -177,11 +190,10 @@ export default function HomeScreen() {
     setIsEditing(true);
     setSelectedId(item.id);
     setForm({
-      kode_barang: item.kode_barang,
-      nama_barang: item.nama_barang,
-      satuan: item.satuan || "",
-      harga: item.harga.toString(),
-      stok: item.stok.toString(),
+      barang_id: item.barang_id.toString(),
+      jumlah: item.jumlah.toString(),
+      tanggal_masuk: item.tanggal_masuk,
+      keterangan: item.keterangan || "",
     });
     setModalVisible(true);
   };
@@ -192,13 +204,7 @@ export default function HomeScreen() {
   };
 
   const resetForm = () => {
-    setForm({
-      kode_barang: "",
-      nama_barang: "",
-      satuan: "",
-      harga: "",
-      stok: "",
-    });
+    setForm({ barang_id: "", jumlah: "", tanggal_masuk: "", keterangan: "" });
     setIsEditing(false);
     setSelectedId(null);
   };
@@ -216,15 +222,15 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.headerWrapper}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>📦 {t("barang.title")}</Text>
+          <Text style={styles.headerTitle}>📥 {t("masuk.title")}</Text>
           <View style={styles.headerBadge}>
             <Text style={styles.headerBadgeText}>
-              {filteredData.length} {t("dashboard.item")}
+              {filteredData.length} {t("masuk.transaksi")}
             </Text>
           </View>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-          <Ionicons name="add" size={24} color="#fff" />
+          <Ionicons name="add" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -256,83 +262,70 @@ export default function HomeScreen() {
             colors={["#2563eb"]}
           />
         }
-        ListEmptyComponent={
-          <View style={styles.emptyWrapper}>
-            <Ionicons name="archive-outline" size={48} color="#94a3b8" />
-            <Text style={styles.empty}>{t("dashboard.belum_ada_data")}</Text>
-          </View>
-        }
-        renderItem={({ item }) => {
-          const status = getStatusStok(item.stok);
-          return (
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.nama}>{item.nama_barang}</Text>
-                <View
-                  style={[styles.statusBadge, { backgroundColor: status.bg }]}
-                >
-                  <Text style={[styles.statusText, { color: status.color }]}>
-                    {status.label}
-                  </Text>
-                </View>
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.nama}>{item.barang.nama_barang}</Text>
+              <View style={styles.jumlahBadge}>
+                <Ionicons name="add-circle-outline" size={14} color="#2563eb" />
+                <Text style={styles.jumlahBadgeText}>+{item.jumlah}</Text>
               </View>
-              <View style={styles.cardBody}>
-                <View style={styles.row}>
+            </View>
+            <View style={styles.cardBody}>
+              <View style={styles.row}>
+                <View style={styles.rowLeft}>
+                  <Ionicons name="calendar-outline" size={14} color="#94a3b8" />
+                  <Text style={styles.label}>{t("masuk.tanggal")}</Text>
+                </View>
+                <Text style={styles.value}>
+                  {formatDate(item.tanggal_masuk)}
+                </Text>
+              </View>
+              {item.keterangan && (
+                <View style={[styles.row, styles.rowLast]}>
                   <View style={styles.rowLeft}>
                     <Ionicons
-                      name="pricetag-outline"
+                      name="clipboard-outline"
                       size={14}
                       color="#94a3b8"
                     />
-                    <Text style={styles.label}>{t("barang.kode")}</Text>
+                    <Text style={styles.label}>{t("masuk.ket")}</Text>
                   </View>
-                  <Text style={styles.value}>{item.kode_barang}</Text>
-                </View>
-                <View style={styles.row}>
-                  <View style={styles.rowLeft}>
-                    <Ionicons name="cube-outline" size={14} color="#94a3b8" />
-                    <Text style={styles.label}>{t("barang.satuan")}</Text>
-                  </View>
-                  <Text style={styles.value}>{item.satuan || "-"}</Text>
-                </View>
-                <View style={styles.row}>
-                  <View style={styles.rowLeft}>
-                    <Ionicons name="cash-outline" size={14} color="#94a3b8" />
-                    <Text style={styles.label}>{t("barang.harga")}</Text>
-                  </View>
-                  <Text style={styles.value}>
-                    Rp {item.harga.toLocaleString("id-ID")}
+                  <Text
+                    style={[
+                      styles.value,
+                      { fontStyle: "italic", color: "#64748b" },
+                    ]}
+                  >
+                    {item.keterangan}
                   </Text>
                 </View>
-                <View style={[styles.row, styles.rowLast]}>
-                  <View style={styles.rowLeft}>
-                    <Ionicons name="layers-outline" size={14} color="#94a3b8" />
-                    <Text style={styles.label}>{t("barang.stok")}</Text>
-                  </View>
-                  <Text style={[styles.value, { color: status.color }]}>
-                    {item.stok}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.actionRow}>
-                <TouchableOpacity
-                  style={styles.editBtn}
-                  onPress={() => openEditModal(item)}
-                >
-                  <Ionicons name="pencil" size={16} color="#fff" />
-                  <Text style={styles.btnText}>{t("common.edit")}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.deleteBtn}
-                  onPress={() => handleDelete(item.id, item.nama_barang)}
-                >
-                  <Ionicons name="trash" size={16} color="#fff" />
-                  <Text style={styles.btnText}>{t("common.hapus")}</Text>
-                </TouchableOpacity>
-              </View>
+              )}
             </View>
-          );
-        }}
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.editBtn}
+                onPress={() => openEditModal(item)}
+              >
+                <Ionicons name="pencil" size={16} color="#fff" />
+                <Text style={styles.btnText}>{t("common.edit")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={() => handleDelete(item.id, item.barang.nama_barang)}
+              >
+                <Ionicons name="trash" size={16} color="#fff" />
+                <Text style={styles.btnText}>{t("common.hapus")}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyWrapper}>
+            <Ionicons name="archive-outline" size={48} color="#94a3b8" />
+            <Text style={styles.empty}>{t("masuk.belum_ada_data")}</Text>
+          </View>
+        }
       />
 
       <Modal
@@ -350,98 +343,111 @@ export default function HomeScreen() {
                 color="#2563eb"
               />
               <Text style={styles.modalTitle}>
-                {isEditing ? t("barang.edit") : t("barang.tambah")}
+                {isEditing ? t("masuk.edit") : t("masuk.tambah")}
               </Text>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.inputLabel}>{t("barang.kode")}</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons
-                  name="pricetag-outline"
-                  size={18}
-                  color="#94a3b8"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={form.kode_barang}
-                  onChangeText={(text) =>
-                    setForm({ ...form, kode_barang: text })
-                  }
-                  placeholder="BRG-001"
-                  placeholderTextColor="#94a3b8"
-                />
+              <Text style={styles.inputLabel}>{t("masuk.pilih_barang")}</Text>
+              <View style={styles.pickerWrapper}>
+                {barangList.length === 0 ? (
+                  <View style={styles.emptyPickerWrapper}>
+                    <Ionicons
+                      name="alert-circle-outline"
+                      size={24}
+                      color="#94a3b8"
+                    />
+                    <Text style={styles.emptyPickerText}>
+                      {t("masuk.belum_ada_barang")}
+                    </Text>
+                  </View>
+                ) : (
+                  <ScrollView
+                    nestedScrollEnabled
+                    showsVerticalScrollIndicator={true}
+                  >
+                    {barangList.map((item) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={[
+                          styles.pickerItem,
+                          form.barang_id === item.id.toString() &&
+                            styles.pickerItemSelected,
+                        ]}
+                        onPress={() =>
+                          setForm({ ...form, barang_id: item.id.toString() })
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.pickerText,
+                            form.barang_id === item.id.toString() &&
+                              styles.pickerTextSelected,
+                          ]}
+                        >
+                          {item.kode_barang} - {item.nama_barang} (
+                          {t("barang.stok")}: {item.stok})
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
               </View>
 
-              <Text style={styles.inputLabel}>{t("barang.nama")}</Text>
+              <Text style={styles.inputLabel}>{t("masuk.jumlah")}</Text>
               <View style={styles.inputWrapper}>
                 <Ionicons
-                  name="cube-outline"
+                  name="add-circle-outline"
                   size={18}
                   color="#94a3b8"
                   style={styles.inputIcon}
                 />
                 <TextInput
                   style={styles.input}
-                  value={form.nama_barang}
-                  onChangeText={(text) =>
-                    setForm({ ...form, nama_barang: text })
-                  }
-                  placeholder={t("barang.nama")}
-                  placeholderTextColor="#94a3b8"
-                />
-              </View>
-
-              <Text style={styles.inputLabel}>{t("barang.satuan")}</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons
-                  name="git-compare-outline"
-                  size={18}
-                  color="#94a3b8"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={form.satuan}
-                  onChangeText={(text) => setForm({ ...form, satuan: text })}
-                  placeholder="Pcs, Unit, Box"
-                  placeholderTextColor="#94a3b8"
-                />
-              </View>
-
-              <Text style={styles.inputLabel}>{t("barang.harga")}</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons
-                  name="cash-outline"
-                  size={18}
-                  color="#94a3b8"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={form.harga}
-                  onChangeText={(text) => setForm({ ...form, harga: text })}
-                  placeholder="10000"
-                  keyboardType="numeric"
-                  placeholderTextColor="#94a3b8"
-                />
-              </View>
-
-              <Text style={styles.inputLabel}>{t("barang.stok")}</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons
-                  name="layers-outline"
-                  size={18}
-                  color="#94a3b8"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={form.stok}
-                  onChangeText={(text) => setForm({ ...form, stok: text })}
+                  value={form.jumlah}
+                  onChangeText={(text) => setForm({ ...form, jumlah: text })}
                   placeholder="0"
                   keyboardType="numeric"
                   placeholderTextColor="#94a3b8"
+                />
+              </View>
+
+              <Text style={styles.inputLabel}>{t("masuk.tanggal")}</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color="#94a3b8"
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  value={form.tanggal_masuk}
+                  onChangeText={(text) =>
+                    setForm({ ...form, tanggal_masuk: text })
+                  }
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#94a3b8"
+                />
+              </View>
+
+              <Text style={styles.inputLabel}>{t("masuk.keterangan")}</Text>
+              <View style={[styles.inputWrapper, styles.inputWrapperTextArea]}>
+                <Ionicons
+                  name="clipboard-outline"
+                  size={18}
+                  color="#94a3b8"
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={form.keterangan}
+                  onChangeText={(text) =>
+                    setForm({ ...form, keterangan: text })
+                  }
+                  placeholder={t("common.opsional")}
+                  placeholderTextColor="#94a3b8"
+                  multiline
+                  numberOfLines={3}
                 />
               </View>
 
@@ -566,8 +572,16 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f1f5f9",
   },
   nama: { fontSize: 17, fontWeight: "600", color: "#0f172a", flex: 1 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
-  statusText: { fontSize: 10, fontWeight: "600", letterSpacing: 0.2 },
+  jumlahBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#dbeafe",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    gap: 4,
+  },
+  jumlahBadgeText: { color: "#2563eb", fontSize: 14, fontWeight: "700" },
   cardBody: { paddingTop: 2 },
   row: {
     flexDirection: "row",
@@ -663,8 +677,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
     paddingHorizontal: 12,
   },
+  inputWrapperTextArea: { alignItems: "flex-start", paddingTop: 10 },
   inputIcon: { marginRight: 8 },
   input: { flex: 1, paddingVertical: 12, fontSize: 15, color: "#0f172a" },
+  textArea: { minHeight: 80, textAlignVertical: "top", paddingTop: 8 },
+  pickerWrapper: {
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
+    borderRadius: 10,
+    backgroundColor: "#f8fafc",
+    maxHeight: 150,
+    padding: 4,
+  },
+  pickerItem: { padding: 10, borderRadius: 8, marginVertical: 2 },
+  pickerItemSelected: { backgroundColor: "#dbeafe" },
+  pickerText: { fontSize: 14, color: "#0f172a" },
+  pickerTextSelected: { color: "#2563eb", fontWeight: "600" },
+  emptyPickerWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+    gap: 6,
+  },
+  emptyPickerText: { textAlign: "center", color: "#94a3b8", fontSize: 14 },
   modalActions: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -1,50 +1,39 @@
-# Welcome to your Expo app 👋
+# 📱 PDAM Inventory Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplikasi mobile sistem inventory **Perumda Air Minum Tirta Sago (PAMTIGO) Kota Payakumbuh**.
 
-## Get started
+## 🛠️ Tech Stack
 
-1. Install dependencies
+- Expo 57
+- React Native 0.86
+- TypeScript
+- Expo Router
+- Axios
 
-   ```bash
-   npm install
-   ```
+## ✨ Fitur
 
-2. Start the app
+- Login SSO dari Web 1
+- Dashboard dengan statistik
+- CRUD Master Barang
+- CRUD Barang Masuk
+- CRUD Barang Keluar
+- Notifikasi real-time (polling 3 detik)
+- AI Assistant (Gemini)
+- Export Laporan (PDF & Excel)
+- Filter tanggal
+- Multi-bahasa (ID & EN)
+- Pull-to-refresh
+- Backup & Restore data
 
-   ```bash
-   npx expo start
-   ```
+## 📸 Tampilan Aplikasi
 
-In the output, you'll find options to open the app in a
+![Dashboard Mobile](screenshots/Foto%201.png)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## 🚀 Cara Install
 
 ```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+git clone https://github.com/MuhammadReki/pdam-inventory-mobile.git
+cd pdam-inventory-mobile
+npm install
+cp .env.example .env
+npx expo start --go -c
